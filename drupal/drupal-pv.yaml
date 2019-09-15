@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: drupal-pvc
+  name: drupal-pv
 spec:
   storageClassName: manual
   capacity:
