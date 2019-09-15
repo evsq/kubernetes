@@ -15,7 +15,7 @@ spec:
         app: drupal
     spec:
       initContainers:
-        - name: init-sitest-volume
+        - name: init-sites-volume
           image: drupal:8.6
           command: ['/bin/bash', '-c']
           args: ['cp -r /var/www/html/sites/ /data/; chown -R www-data:www-data /data/']
