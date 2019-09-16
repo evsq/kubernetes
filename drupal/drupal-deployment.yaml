@@ -25,6 +25,9 @@ spec:
       containers:
         - name: drupal
           image: drupal:8.6
+          ports:
+            - containerPort: 30080
+              name: drupal
           volumeMounts:
           - name: drupal-volume
             mountPath: /var/www/html/modules
