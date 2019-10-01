@@ -1,0 +1,197 @@
+CentOS 7
+
+# Configure server
+
+# Create a volume group
+
+pvcreate /dev/sdb
+vgcreate vg-targetd /dev/sdb
+
+# Configure the iSCSI server
+
+yum install targetcli targetd -y
+
+# Enable and start target
+
+systemctl enable --now target
+
+# Configure targetd
+
+vim /etc/target/targetd.yaml
+
+# See http://www.yaml.org/spec/1.2/spec.html for more on YAML.
+#
+# A sample /etc/target/targetd.yaml file.
+#
+
+# No default password, please pick a good one.
+
+password: yourPassword
+
+# defaults below; uncomment and edit
+#block_pools: [vg-targetd/thin_pool] # just 1 by default, but can be more
+#fs_pools: []  # Path to btrfs FS, eg. /my_btrfs_mount
+pool_name: vg-targetd
+user: admin
+ssl: false
+target_name: iqn.2019-09.ru.testorg.kubernetes:targetd
+
+# log level (debug, info, warning, error, critical)
+#log_level: info
+
+#ssl: false
+# if ssl is activated:
+#ssl_cert: /etc/target/targetd_cert.pem
+#ssl_key: /etc/target/targetd_key.pem
+
+systemctl enable --now targetd
+
+# Optional. Configure the firewall
+
+firewall-cmd --add-service=iscsi-target --permanent
+firewall-cmd --add-port=18700/tcp --permanent 
+firewall-cmd --reload
+
+# Configure the nodes (iscsi clients)
+
+# Install the iscsi-initiatior-utils
+
+yum install iscsi-initiator-utils -y
+
+# Configure the initiator name
+
+vim /etc/iscsi/initiatorname.iscsi
+
+InitiatorName=iqn.2019-09.ru.testorg.kubernetes:worker1
+
+systemctl enable --now iscsid
+
+
+# Create the iscsi provisioner pod in Kubernetes
+
+kubectl create secret generic targetd-account --from-literal=username=admin --from-literal=password=yourPassword
+
+kubectl apply -f iscsi-provisioner-d.yaml
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: iscsi-provisioner-runner
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "create", "update", "patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: run-iscsi-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: iscsi-provisioner
+    namespace: iscsi
+roleRef:
+  kind: ClusterRole
+  name: iscsi-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: iscsi-provisioner
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: iscsi-provisioner
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: iscsi-provisioner
+    spec:
+      containers:
+        - name: iscsi-provisioner
+          imagePullPolicy: Always
+          image: quay.io/external_storage/iscsi-controller:latest
+          args:
+            - "start"
+          env:
+            - name: PROVISIONER_NAME
+              value: iscsi-targetd
+            - name: LOG_LEVEL
+              value: debug
+            - name: TARGETD_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: targetd-account
+                  key: username
+            - name: TARGETD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: targetd-account
+                  key: password
+            - name: TARGETD_ADDRESS 
+              value: 10.20.0.50 # internal ip your iscsi server
+      serviceAccount: iscsi-provisioner 
+
+# Create StorageClass 
+
+kubectl apply -f storageClassIscsi.yaml
+
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: iscsi-ssd
+provisioner: iscsi-targetd
+parameters:
+# this id where the iscsi server is running
+  targetPortal: 10.20.0.50:3260
+  
+# this is the iscsi server iqn  
+  iqn: iqn.2019-09.ru.testorg.kubernetes:targetd
+  
+# this is the iscsi interface to be used, the default is default
+# iscsiInterface: default
+
+# this must be on eof the volume groups condifgured in targed.yaml, the default is vg-targetd
+  volumeGroup: vg-targetd
+
+# this is a comma separated list of initiators that will be give access to the created volumes, they must correspond to what you have configured in your nodes.
+  initiators: iqn.2019-09.ru.testorg.kubernetes:worker1
+  
+# whether or not to use chap authentication for discovery operations  
+  chapAuthDiscovery: "enable"
+ 
+# whether or not to use chap authentication for session operations  
+  chapAuthSession: "enable" 
+
+
+For example let test iscsi provisioner and create pvc
+
+kubectl apply -f test-pvc.yaml
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: myclaim
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "iscsi-ssd"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+
+
