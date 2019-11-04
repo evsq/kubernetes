@@ -1,0 +1,81 @@
+### Create user for kubernetes cluster
+
+# Create key for user
+openssl genrsa -out test.key 2048
+# Create certificate signing request. 
+# In "-subj" you need to map username in "CN" and group in "O" to provide this information in Role Binding section.
+openssl req -new -key test.key -out test.csr -subj "/CN=test/O=ops"
+# Create user certificate
+openssl x509 -req -in test.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out test.crt -days 500
+# Set user credentials for kubernetes cluster
+kubectl config set-credentials test --client-certificate=test.crt --client-key=test.key --embed-certs=true
+# Set context for access kubernetes cluster
+kubectl config set-context test --cluster=kubernetes --user=test
+# Use context
+kubectl config use-context test
+
+### Configure RBAC for user. For example create namespace "test"
+# Note: Switch context to admin otherwise you'll not be able to perform these steps
+kubectl create ns test
+
+# create role in test namespace where user can do everything with deployments and get/watch pods and logs
+cat <<EOF > test-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: test
+  namespace: test
+rules:
+- apiGroups: [""] # indicates the core API group
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["extensions", "apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+EOF
+
+# create role binding to bind subject and role. 
+# In this case i'll type in section "Group - name ops" which i mapped when created certificate
+cat <<EOF > test-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: test
+  namespace: test
+subjects:
+- kind: Group # You can type - kind: User
+  name: ops # name: test
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: test
+  apiGroup: rbac.authorization.k8s.io
+EOF
+  
+# For example create cluster role to access all resources
+cat <<EOF > test-cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: test
+rules:
+- apiGroups: ["*"] # indicates the core API group
+  resources: ["*"]
+  verbs: ["*"]
+EOF
+  
+# create cluster role binding
+cat <<EOF > test-cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: test
+subjects:
+- kind: User
+  name: test
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: test
+  apiGroup: rbac.authorization.k8s.io
+EOF
