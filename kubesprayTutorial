@@ -1,0 +1,27 @@
+git clone https://github.com/kubernetes-sigs/kubespray.git
+
+cd kubespray
+
+virtualenv ~/.virtualenvs/kubespray
+source ~/.virtualenvs/kubespray/bin/activate
+
+pip3 install -r requirements.txt
+
+cp -rfp inventory/sample inventory/kubespray
+
+declare -a IPS=(10.30.0.5 10.30.0.6 10.30.0.7)
+CONFIG_FILE=inventory/kubespray/hosts.yml python3 contrib/inventory_builder/inventory.py ${IPS[@]}
+
+ansible-playbook -i hosts.yml -b --key-file=~/.ssh/id_rsa.pub cluster.yml
+
+# If you faced problem with "enter passphrase for key" try it:
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa
+
+# If you faced problem with "etcd check" "Error: client: etcd cluster is unavailable or misconfigured"
+systemctl stop firewalld
+yum remove firewalld
+sed -i s/^SELINUX=.*$/SELINUX=disabled/ /etc/selinux/config
+
+# Access to kube dashboard
+kubectl create clusterrolebinding kubernetes-dashboard --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
