@@ -21,6 +21,10 @@ all:
       ansible_user: root
       ip: internal_ip
 
+# if you faced problem with "Unable to connect to the server: x509: certificate is valid for XXX, not for XXX"
+# then add "supplementary_addresses_in_ssl_keys" ips for file in inventory/sample/group_vars/k8s-cluster/k8s-cluster.yml
+supplementary_addresses_in_ssl_keys: [1.1.1.1, 2.2.2.2]
+
 ansible-playbook -i hosts.yml -b --key-file=~/.ssh/id_rsa.pub cluster.yml
 
 # If you faced problem with "enter passphrase for key" try it:
