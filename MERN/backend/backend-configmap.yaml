@@ -1,0 +1,9 @@
+# in CLIENT variable put your frontend app ip:port 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-side-configs
+data:
+  PORT: "5000"
+  CLIENT: http://89.22.185.16:30001/
+  MONGODB_URL: todo-mongo-service.default

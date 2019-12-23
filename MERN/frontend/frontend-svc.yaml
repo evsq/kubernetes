@@ -1,0 +1,28 @@
+# if you are creating k8s cluster on cloud provider, then apply loadbalancer svc
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-client-service
+spec:
+  selector:
+    app: todo-client-app
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+---
+# if you are creating k8s cluster on bare metal, you have multiple choices, first, you can apply nodeport svc 
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-client-service
+spec:
+  selector:
+    app: todo-client-app
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30001
+  type: NodePort
+---
+# second, you can create ingress-controller and apply cluster ip svc
