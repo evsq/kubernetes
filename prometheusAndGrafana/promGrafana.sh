@@ -36,6 +36,13 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ['10.5.0.10:9100']
+  - job_name: 'etcd'
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/etcd/etcd-ca.crt
+      cert_file: /etc/prometheus/etcd/etcd.crt
+      key_file: /etc/prometheus/etcd/etcd.key
+    scrape_interval: 5s
   - job_name: 'prometheus_slave'
     scrape_interval: 5s
     static_configs:
