@@ -1,0 +1,6 @@
+# Initialize pgbench
+pgbench -i -s 50
+
+# Start work load (-c (number of concurrent clients) -T (duration test in seconds) (pgbench --help for additional infromation))
+pgbench -c 10 -T 300 -U admin -d test
+
