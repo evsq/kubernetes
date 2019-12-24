@@ -1,0 +1,22 @@
+# Restrict deploy some pods into specific namespace on specific node
+
+# Enable admission plugin in kube-apiserver configuration
+--enable-admission-plugins=PodNodeSelector
+
+# Label node
+kubectl label node s1-rough-violet test=selector
+
+# Create any namespaces
+kubectl create ns test
+
+# Add annotation in namespace under metadata
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/node-selector: test=selector
+
+# Every time when you'll create pods in test namespace, scheduler will assign pods on s1-rough-violet node
+# Even when you scale replicas, pods will be assigned on same node
+kubectl run -n test nginx --image nginx --replicas 3
+
