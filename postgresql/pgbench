@@ -1,6 +1,11 @@
+# Access to pod
+kubectl exec -it postgres-demo-0 -- bash
+su - postgres
+
+
 # Initialize pgbench
-pgbench -i -s 50
+pgbench -i -s 50 -U admin -d test
 
 # Start work load (-c (number of concurrent clients) -T (duration test in seconds) (pgbench --help for additional infromation))
-pgbench -c 10 -T 300 -U admin -d test
+pgbench -c 100 -T 3600 -U admin -d test
 

@@ -4,7 +4,7 @@ metadata:
   name: postgres-demo
 spec:
   serviceName: "postgres"
-  replicas: 2
+  replicas: 5
   selector:
     matchLabels:
       app: postgres
@@ -34,4 +34,4 @@ spec:
       storageClassName: cloudmts-ssd
       resources:
         requests:
-          storage: 3Gi
+          storage: 100Gi
