@@ -1,15 +1,14 @@
-Ingress + HAproxy on kubernetes bare metal cluster
-
-Installation
+# Ingress + HAproxy on kubernetes bare metal cluster
 
 You can install haproxy on your kubernetes nodes or create another one VM. I'll install haproxy on my first node in cluster
 
-# Install HAproxy
-
+Install HAproxy
+```
 yum install haproxy -y
+```
 
-# Export ip of your nodes in variables. Find your nodes ip, best way use "kubectl get nodes -o wide"
-
+Export ip of your nodes in variables. Find your nodes ip, best way use "kubectl get nodes -o wide"
+```
 export nodeIP1=10.30.0.6
 export nodeIP2=10.30.0.7
 
@@ -25,21 +24,18 @@ backend nginx
 EOF
 
 systemctl enable --now haproxy
-
-# Install nginx ingress controller
-
+```
+Install nginx ingress controller
+```
 kubectl apply -f nginx-inc-ingress/ns-and-sa.yaml
 kubectl apply -f nginx-inc-ingress/default-server-secret.yaml
 kubectl apply -f nginx-inc-ingress/nginx-config.yaml
 kubectl apply -f nginx-inc-ingress/custom-resource-definitions.yaml
 kubectl apply -f nginx-inc-ingress/rbac.yaml
 kubectl apply -f nginx-inc-ingress/nginx-ingress.yaml
-
-# Test ingress
-
-# Create deployments and services
-
-
+```
+Create deployments and services
+```
 cat <<EOF > hello-app1.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -112,9 +108,9 @@ EOF
 
 kubectl apply -f hello-app1.yaml
 kubectl apply -f hello-app2.yaml
-
-# Create Ingress rule
-
+```
+Create Ingress rule
+```
 cat <<EOF > hello-ingress.yaml
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
@@ -136,10 +132,13 @@ spec:
 EOF
 
 kubectl apply -f hello-ingress.yaml
-
-# If you don't have a DNS, then type external ip your VM where ran HAproxy and name your host (in my case hello.com) that will be use for access to app.
-
+```
+If you don't have a DNS, then type external ip your VM where ran HAproxy and name your host (in my case hello.com) that will be use for access to app.
+```
 echo "1.2.3.4 hello.com" >> /etc/hosts
-
+```
+Test ingress
+```
 curl hello.com
 curl hello.com/app2
+```
