@@ -7,6 +7,9 @@ tar xvzf node_exporter-0.18.1.linux-amd64.tar.gz
 # Copy node_exporter bin
 cp node_exporter-0.18.1.linux-amd64/node_exporter /usr/bin/
 
+# Remove node_exporter dir
+rm -rf node_exporter-0.18.1.linux-amd64
+
 # Create node_exporter user
 useradd -s /sbin/nologin nexporter
 
