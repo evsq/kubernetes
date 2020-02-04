@@ -15,4 +15,15 @@ helm init --service-account tiller
 
 helm init
 
+# Install Helm without Tiller
+
+helm init --client-only
+
+# Fetch and untar some chart
+
+helm fetch somechart --untar
+
+# Render template
+
+helm template somechart -x somechart/templates/deployment.yaml somedir/deployment.yaml
 
