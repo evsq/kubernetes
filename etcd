@@ -1,0 +1,21 @@
+# Export variables for apply command below
+
+export ETCDCTL_API=3
+export ETCDCTL_DIAL_TIMEOUT=3s
+export ETCDCTL_ENDPOINTS='https://10.20.0.2:2379'
+export ETCDCTL_CACERT=/etc/ssl/etcd/etcd-ca.crt
+export ETCDCTL_CERT=/etc/kubernetes/pki/apiserver-etcd-client.crt
+export ETCDCTL_KEY=/etc/kubernetes/pki/apiserver-etcd-client.key
+
+
+# List all keys with bytes
+
+#!/bin/bash
+
+KEYS=($(etcdctl get / --prefix --keys-only | grep -v ^$))
+
+for key in ${KEYS[@]}
+  do
+    echo -n "${key} "
+    etcdctl get ${key} | wc -c
+  done
