@@ -6,24 +6,21 @@ chmod +x get_helm.sh
 ./get_helm.sh
 
 # Installing Tiller with RBAC enabled
-
 kubectl create serviceaccount --namespace kube-system tiller
 kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
 helm init --service-account tiller
 
 # Installing Tiller without RBAC
-
 helm init
 
 # Install Helm without Tiller
-
 helm init --client-only
 
 # Fetch and untar some chart
-
 helm fetch somechart --untar
 
-# Render template
-
+# Render file template
 helm template somechart -x somechart/templates/deployment.yaml somedir/deployment.yaml
 
+# Render all templates in specific file
+helm template . -f values.yaml > vault-resources.yaml 
