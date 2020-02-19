@@ -1,0 +1,22 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: test-postgres # Note, that the name of the cluster must start with the teamId and -
+  namespace: default
+spec:
+  teamId: "test" # Note, that the name of the cluster must start with the teamId and -
+  volume:
+    size: 1Gi
+  numberOfInstances: 1
+  users:
+    testuser:  # database owner
+    - superuser
+    - createdb
+    - login
+  patroni:
+    pg_hba:
+    - host all all 0.0.0.0/0 md5
+  databases:
+    testuser: testuser  # dbname: owner
+  postgresql:
+    version: "11"
