@@ -1,0 +1,160 @@
+###Create CA certs/key
+
+cat <<EOF > ca-config.json
+{
+    "signing": {
+        "default": {
+            "expiry": "168h"
+        },
+        "profiles": {
+            "server": {
+                "expiry": "8760h",
+                "usages": [
+                    "signing",
+                    "key encipherment",
+                    "server auth"
+                ]
+            },
+            "client": {
+                "expiry": "8760h",
+                "usages": [
+                    "signing",
+                    "key encipherment",
+                    "client auth"
+                ]
+            }
+        }
+    }
+}
+EOF
+
+cat <<EOF > ca-csr.json
+{
+    "CN": "Self Signed Example CA",
+    "hosts": [
+        "example.com"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+        {
+            "C": "RU",
+            "ST": "RU",
+            "L": "Moscow"
+        }
+    ]
+}
+EOF
+
+cfssl gencert -initca ca-csr.json | cfssljson -bare ca -
+
+
+###Create client certs/key
+
+cat <<EOF > server.json
+{
+    "CN": "Self Signed Example CA",
+    "hosts": [
+        "example.com"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+        {
+            "C": "RU",
+            "ST": "RU",
+            "L": "Moscow"
+        }
+    ]
+}
+EOF
+
+cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=server server.json | cfssljson -bare server
+
+### Create secret for ingress
+kubectl create secret tls tls-secret --key server-key.pem --cert server.pem
+
+
+### Create nginx
+
+cat <<EOF > nginx.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: nginx
+  template:
+    metadata:
+      labels:
+        run: nginx
+    spec:
+      containers:
+      - image: nginx
+        imagePullPolicy: Always
+        name: nginx
+EOF
+
+kubectl create -f nginx.yaml
+
+### Create service for nginx
+
+cat <<EOF > nginx-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: nginx
+  type: ClusterIP
+EOF
+
+kubectl create -f nginx-svc.yaml
+
+### Create ingress
+
+cat <<EOF > nginx-ingress.yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: echo-ingress
+spec:
+  tls:
+  - hosts:
+    - example.com
+    secretName: tls-secret
+  rules:
+  - host: example.com
+    http:
+      paths:
+      - backend:
+          serviceName: nginx
+          servicePort: 80
+EOF
+
+kubectl create -f nginx-ingress.yaml
+
+
+### Test
+# If you try access through http url, you'll get code response like: 308 Permanent Redirect
+curl https://1.2.3.4(yourIp) -H "Host: example.com" -k
+
+# If you'd like access your app through browser then add your ip and dns name like "example.com" in /etc/hosts file
+# For example
+1.2.3.4 example.com
