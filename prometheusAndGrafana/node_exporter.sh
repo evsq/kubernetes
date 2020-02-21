@@ -14,7 +14,7 @@ rm -rf node_exporter-0.18.1.linux-amd64
 useradd -s /sbin/nologin nexporter
 
 # Create node_exporter systemd unit
-cat <<EOF > /lib/systemd/system/node_exporter.service
+cat <<EOF > /usr/lib/systemd/system/node_exporter.service
 [Unit]
 Description=Node Exporter
 After=network.target
