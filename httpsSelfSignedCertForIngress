@@ -1,5 +1,10 @@
 ###Create CA certs/key
+# There are two ways for creating certs/key through cfssl and openssl
 
+# OPENSSL way
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server-key.pem -out server.pem -subj "/CN=example.com/O=example.com"
+
+# CFSSL way
 cat <<EOF > ca-config.json
 {
     "signing": {
