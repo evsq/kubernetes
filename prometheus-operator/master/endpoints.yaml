@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+  labels:
+    k8s-app: master-node-exporter
+  name: master-node-exporter
+  namespace: monitoring
+subsets:
+- addresses:
+  - ip: 10.20.0.2
+    nodeName: master0
+  - ip: 10.20.0.3
+    nodeName: master1 
+  - ip: 10.20.0.4
+    nodeName: master2
+  ports:
+  - name: metrics
+    port: 9100
+    protocol: TCP

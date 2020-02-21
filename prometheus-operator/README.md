@@ -148,3 +148,81 @@ spec:
   serviceMonitorSelector: {}
   version: v2.4.2
   ```
+
+# Monitoring external masters
+
+Install node exporter on masters VM. Use bash script in master directory
+
+```
+chmod u+x master/node_exporter.sh
+./node_exporter.sh
+```
+
+Create Service
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: master-node-exporter
+  name: master-node-exporter
+  namespace: monitoring
+spec:
+  clusterIP: None
+  ports:
+  - name: metrics
+    port: 9100
+    targetPort: 9100
+```
+
+Create Endpoints
+
+```
+apiVersion: v1
+kind: Endpoints
+metadata:
+  labels:
+    k8s-app: master-node-exporter
+  name: master-node-exporter
+  namespace: monitoring
+subsets:
+- addresses:
+  - ip: 10.20.0.2
+    nodeName: master0
+  - ip: 10.20.0.3
+    nodeName: master1 
+  - ip: 10.20.0.4
+    nodeName: master2
+  ports:
+  - name: metrics
+    port: 9100
+    protocol: TCP
+```
+
+Create ServiceMonitor
+
+```
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    k8s-app: master-node-exporter
+  name: master-node-exporter
+  namespace: monitoring
+spec:
+  endpoints:
+  - interval: 5s
+    port: metrics
+    scheme: http
+  jobLabel: k8s-app
+  selector:
+    matchLabels:
+      k8s-app: master-node-exporter
+```
+
+Add node exporter dashboard for Grafana
+
+```
+id 1860
+```
