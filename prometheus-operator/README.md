@@ -90,7 +90,7 @@ metadata:
   namespace: monitoring
 spec:
   endpoints:
-  - interval: 30s
+  - interval: 5s
     port: metrics
     scheme: https
     tlsConfig:
