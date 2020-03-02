@@ -1,4 +1,3 @@
-#!/bin/bash
 
 # Create kube-state-metrics.yaml file for Kubernetes
 
@@ -143,7 +142,7 @@ spec:
     k8s-app: kube-state-metrics
 EOF
 
-# If you use ingress, create configmap and get access outside cluster.
+# If you use  bare metal ingress, create configmap and get access outside cluster.
 # Type any port through which prometheus would scrape metrics ( In my case 8080 ).
 # Type value in namespace and service through which expose kube-state-metrics pod.
 
