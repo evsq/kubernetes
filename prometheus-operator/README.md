@@ -148,6 +148,12 @@ spec:
   serviceMonitorSelector: {}
   version: v2.4.2
   ```
+Add etcd dashboard for Grafana
+
+```
+id 3070
+```
+  
 
 # Monitoring external masters
 
