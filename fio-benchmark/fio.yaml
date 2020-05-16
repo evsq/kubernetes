@@ -1,0 +1,40 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test
+spec:
+  storageClassName: cloudmts-ssd
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fio-benchmark
+  labels:
+    app: fio-benchmark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fio-benchmark
+  template:
+    metadata:
+      labels:
+        app: fio-benchmark
+    spec:
+      containers:
+      - name: fio
+        image: evsq/fio
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do sleep 100000;done"]
+        volumeMounts:
+          - name: test
+            mountPath: /data
+      volumes:
+      - name: test
+        persistentVolumeClaim:
+          claimName: test
