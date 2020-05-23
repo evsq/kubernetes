@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: something
+    app2: something2
+  name: nginx
+spec:
+  clusterIP: None
+  ports:
+  - name: web
+    port: 80
+  selector:
+    app: something
+    app2: something2
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: something
+    app2: something2
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: something
+      app2: something2
+  serviceName: nginx
+  template:
+    metadata:
+      labels:
+        app: something
+        app2: something2
+    spec:
+      containers:
+      - image: test-image
+        name: nginx
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - mountPath: /usr/share/id/html
+          name: www
+  volumeClaimTemplates:
+  - metadata:
+      labels:
+        app: something
+        app2: something2
+      name: www
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: my-storage-class
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  labels:
+    app: something
+    app2: something2
+  name: id
+spec:
+  rules:
+  - host: test
+    http:
+      paths:
+      - backend:
+          serviceName: id
+          servicePort: 80
+  tls:
+  - hosts:
+    - test
+    secretName: tls-id
