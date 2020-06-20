@@ -1,0 +1,44 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-pvc
+spec:
+  storageClassName: ceph-rbd
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-pv-pod
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      labels:
+        app: test
+    spec:
+      containers:
+      - name: task-pv-container
+        command: ["/bin/sh","-c"]
+        args:
+          - touch /var/log/test.txt;
+            cat /var/log/test.txt;
+            echo "test pv" >> /var/log/test.txt;
+            sleep 36000;
+        image: alpine
+        volumeMounts:
+        - mountPath: "/var/log/"
+          name: test-pvc
+      volumes:
+      - name: test-pvc
+        persistentVolumeClaim:
+          claimName: test-pvc
