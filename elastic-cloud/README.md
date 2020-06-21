@@ -23,7 +23,7 @@ Deploy filebeat
 You need to change parameters below in filebeat.yaml , if you made any changes
 ```
         - name: ELASTICSEARCH_HOST
-          value: https://quickstart-es-http
+          value: https://elasticsearch-es-http
         - name: ELASTICSEARCH_PORT
           value: "9200"
         - name: ELASTICSEARCH_USERNAME
@@ -31,7 +31,7 @@ You need to change parameters below in filebeat.yaml , if you made any changes
         - name: ELASTICSEARCH_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: quickstart-es-elastic-user
+              name: elasticsearch-es-elastic-user
               key: elastic
 ```
 
@@ -43,13 +43,13 @@ Test
 
 Get a password to log in kibana
 ```
-kubectl get secret -n logging quickstart-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 -d
+kubectl get secret -n logging elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 -d
 ```
 
 Use port-forward to access Kibana and enter "elastic" in user field, enter password you received from secret above
 
 ```
-kubectl port-forward -n logging service/quickstart-kb-http 5601
+kubectl port-forward -n logging service/kibana-kb-http 5601
 ```
 
 Create index pattern

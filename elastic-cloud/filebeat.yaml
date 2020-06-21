@@ -66,14 +66,14 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: filebeat
-        image: docker.elastic.co/beats/filebeat:7.6.0
+        image: docker.elastic.co/beats/filebeat:7.8.0
         args: [
           "-c", "/etc/filebeat.yml",
           "-e",
         ]
         env:
         - name: ELASTICSEARCH_HOST
-          value: https://quickstart-es-http
+          value: https://elasticsearch-es-http
         - name: ELASTICSEARCH_PORT
           value: "9200"
         - name: ELASTICSEARCH_USERNAME
@@ -81,7 +81,7 @@ spec:
         - name: ELASTICSEARCH_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: quickstart-es-elastic-user
+              name: elasticsearch-es-elastic-user
               key: elastic
         - name: ELASTIC_CLOUD_ID
           value:
@@ -121,7 +121,7 @@ spec:
       volumes:
       - name: cert
         secret:
-          secretName: quickstart-es-http-certs-public
+          secretName: elasticsearch-es-http-certs-public
       - name: config
         configMap:
           defaultMode: 0600
