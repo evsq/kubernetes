@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx
+data:
+  nginx.conf: |
+    worker_processes auto;
+
+    error_log stderr info;
+
+    events {
+        worker_connections 1024;
+    }
+
+    stream {
+        upstream postgres {
+            server 1.2.3.4:5432;
+        }
+
+        server {
+            listen 5432 so_keepalive=on;
+            proxy_pass postgres;
+        }
+    }  
