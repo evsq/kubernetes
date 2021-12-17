@@ -1,0 +1,8 @@
+#cronjob fail
+kube_job_status_failed{namespace="dasdas",job_name=~"dasdas.*"}
+
+#cronjob doesnt execute
+(time()-kube_cronjob_status_last_schedule_time{}) / 60
+
+#cronjob long time running
+(((time() - kube_job_status_start_time{}) / 60) * on (job_name, namespace) kube_job_status_active{} != 0)
