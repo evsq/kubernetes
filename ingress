@@ -1,0 +1,17 @@
+annotations:
+nginx.ingress.kubernetes.io/configuration-snippet: |
+        more_set_headers "Host: test.com";
+        
+
+annotations:
+nginx.ingress.kubernetes.io/rewrite-target: /$2
+  spec:
+    rules:
+    - host: test.com
+      http:
+        paths:
+        - backend:
+            serviceName: test
+            servicePort: 80
+          path: /test(/|$)(.*)
+          pathType: ImplementationSpecific
