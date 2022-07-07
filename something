@@ -2,3 +2,15 @@
 NAMESPACE={{ .Release.Namespace }}
 POD_NAME=$(kubectl -n $NAMESPACE get pods -l component=test -o json| jq -r '.items[].metadata.name')
 for files in "file1" "file2" ; do kubectl -n ${NAMESPACE} cp ${files} ${POD_NAME}:/test ; done
+
+# if need exclude some node while scheduling pod. you need to put it in containers spec
+ 
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - 1.2.3.4
