@@ -18,14 +18,12 @@ EOF
 
 # Apply sysctl params without reboot
 sudo sysctl --system
-
 sudo mkdir -m 755 /etc/apt/keyrings
 
 # These instructions are for Kubernetes 1.28.
-
 # Update the apt package index and install packages needed to use the Kubernetes apt repository:
-
 sudo apt-get update
+
 # apt-transport-https may be a dummy package; if so, you can skip that package
 sudo apt-get install -y apt-transport-https ca-certificates curl gpg
 
